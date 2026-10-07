@@ -1,0 +1,18 @@
+# Input data excluded from upload
+/inputs/daily_fuel_carbon_prices.csv
+
+# Generated results and local verification files
+/outputs/
+/.verification/
+
+# R and RStudio session files
+.Rproj.user/
+.Rhistory
+.RData
+.Ruserdata
+Rplots*.pdf
+
+# Operating-system files
+.DS_Store
+Thumbs.db
+Desktop.ini
