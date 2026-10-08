@@ -48,3 +48,30 @@ On Windows, use forward slashes in R paths, for example `C:/Users/istaffell/Down
 The default run covers 1 January 2010 to 31 December 2025. When it finishes, open `outputs/figures.pdf` to see the charts. Results and summary data are saved alongside it. Allow a few minutes for the full run to compute.
 
 If you want a short first run to check things work, edit `model_gb_power_system.r` and set `quick_run = TRUE`. This runs a single month and writes to `outputs/quick-run/`. Set it back to `FALSE` to reproduce the full analysis.
+
+## Output files
+
+Full runs write to `outputs/`. Both `--quick` and `quick_run = TRUE` write to `outputs/quick-run/`.
+
+- `results.rds`: the complete model output, including settings, input checksums, plants, half-hourly results, comparisons, financial results and session information. RDS preserves the nested structure and R data types.
+- `results.csv`: the half-hourly dispatch results (`model_output$results`). The `price` column contains modelled SRMC in GBP/MWh. Observed day-ahead prices are in `model_output$out$price` in the RDS file.
+- `monthly_summary.csv`: monthly differences between observed prices and modelled SRMC.
+- `session_info.txt`: the R session information as readable text.
+- `figures.pdf`: summary plots. Add `--no-plots` to skip generating this file.
+
+For example, read the complete quick-run output with:
+
+```r
+model_output = readRDS('outputs/quick-run/results.rds')
+head(model_output$results)
+```
+
+## Regression tests
+
+Run the base-R tests from the repository root:
+
+```sh
+Rscript --vanilla tests/run-regressions.r
+```
+
+The tests check full-run and quick-run configuration, then run the January 2010 demonstration in clean R sessions with and without plots. They verify the saved RDS and CSV data, output locations and PDF creation. Runs use temporary copies and leave existing outputs untouched. GitHub Actions runs the same tests for pull requests and pushes to `main`.

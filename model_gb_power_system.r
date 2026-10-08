@@ -28,6 +28,7 @@
 	# quickly check this works?  
 	# TRUE runs January 2010 as a short demonstration
 	quick_run = FALSE 
+	output_dir = 'outputs'
 
 	# optional command-line shortcuts if running from RScript
 	args = commandArgs(trailingOnly=TRUE)
@@ -44,7 +45,6 @@
 	price_file    = 'inputs/monthly_fuel_carbon_prices.csv'
 	capacity_file = 'inputs/daily_plant_capacity.csv'
 	genmix_file   = 'inputs/electric_insights_data.rds'
-	output_dir    = 'outputs' 
 
 
 
@@ -240,7 +240,8 @@
 		out=out, monthly_summary=monthly_summary,
 		net_demand=list(other=a, crisis=b), session_info=sessionInfo())
 
-	write.csv(model_output, file.path(output_path, 'results.csv'), row.names=FALSE)
+	saveRDS(model_output, file.path(output_path, 'results.rds'))
+	write.csv(results, file.path(output_path, 'results.csv'), row.names=FALSE)
 	write.csv(monthly_summary, file.path(output_path, 'monthly_summary.csv'), row.names=FALSE)
 	writeLines(capture.output(sessionInfo()), file.path(output_path, 'session_info.txt'))
 
