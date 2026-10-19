@@ -222,7 +222,7 @@
 	# split the period into the 18 months of crisis... and everything else
 	pdiff = out$price - out$cost
 	ndema = out$demand - out$wind - out$solar
-	crisis = out$date >= as.POSIXct('2021-07-01 00:00:00', tz='UTC') & out$date < as.POSIXct('2023-01-01 00:00:00', tz='UTC')
+	crisis = out$date >= as.POSIXct('2021-09-01 00:00:00', tz='UTC') & out$date < as.POSIXct('2023-01-01 00:00:00', tz='UTC')
 
 	# summarise differences as a function of net demand
 	a = summarise_net_demand(pdiff[!crisis], ndema[!crisis])

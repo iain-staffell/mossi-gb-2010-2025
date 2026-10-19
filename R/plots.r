@@ -27,7 +27,7 @@
 		abline(h=0)
 		groups = list(crisis, other)
 		colours = c('#FF8529', '#182CC4')
-		labels = c('July 2021 to December 2022', 'Other months in the selected date range')
+		labels = c('September 2021 to December 2022', 'Other months in the selected date range')
 		present = vapply(groups, nrow, integer(1)) > 0
 		for (i in which(present)) {
 			x = groups[[i]]
