@@ -46,13 +46,13 @@ setup_mossi_period = function(mossi, tech, plants, data, availability, start_dat
 	if (any(!is.finite(as.matrix(qq[setdiff(names(qq), 'date')]))))
 		stop('Missing fuel/carbon prices in period starting ', start_date)
 
-	# apply availability day by day, then average available MW over the period
-	q = 1 + (as.integer(format(days, '%m')) - 1) %/% 3
+	# apply each day's calendar-month availability, then average available MW
+	month = as.integer(format(days, '%m'))
 	for (n in names(tech))
 	{
 		t = tech[[n]]
 		installed = cc[[t$capacity_column]]
-		available = availability[[t$availability_column]][match(q, availability$quarter)]
+		available = availability[[t$availability_column]][match(month, availability$month)]
 		if (length(installed) != length(days) || any(!is.finite(installed)) || any(installed < 0) ||
 			length(available) != length(days) || any(!is.finite(available)) || any(available < 0 | available > 1))
 			stop('Invalid capacity or availability for ', n, ' in period starting ', start_date)

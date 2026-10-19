@@ -2,6 +2,8 @@
 ## ##  CHOOSE WHAT TO RUN
 #####
 
+	rm(list=ls())
+
 	# open MOSSI.Rproj, then source this whole script.
 	project_dir = local({
 		paths = unlist(lapply(sys.frames(), function(frame) frame$ofile))
@@ -41,7 +43,7 @@
 
 	# both price files have daily rows; the monthly file repeats each month's prices
 	# run_period controls averaging of prices and capacity when building the stack
-	price_file    = 'inputs/monthly_fuel_carbon_prices.csv'
+	price_file    = 'inputs/daily_fuel_carbon_prices.csv'
 	capacity_file = 'inputs/daily_plant_capacity.csv'
 	genmix_file   = 'inputs/electric_insights_data.rds'
 	output_dir    = 'outputs' 
@@ -71,30 +73,27 @@
 	# of a perfectly competitive market, rather than what we think prices should be
 
 	# how much do power stations spread their bids away from SRMC (GBP/MWh)
-	mossi$bid_spread = 0 		# (previously 17.50)
+	mossi$bid_spread = 10.00		# (set to 0 for SRMC, 10.00 (or other value) for benchmark)
 
 	# the skewness of the bid distributions
 	# (1 = normal, 1.5 = long upwards tail, 0.666 = long downwards tail)
-	mossi$bid_skew = 1			# (previously 0.925)
+	mossi$bid_skew = 1			# (not used, keep at 1)
 
 	# should fuel prices vary differently from their long-run mean
 	# e.g. to have greater seasonal cyclical movements?
 	# (0.5 means they vary at 1.5x, -0.2 means they vary at 0.8x)
-	mossi$fuel_var = 0			# (previously 0.25)
+	mossi$fuel_var = 0			# (not used, keep at 0)
 
 
-	# define our fleet-average power station availability
+	# define our fleet-average power station availability for each calendar month
 	# Ofgem, 2012: Electricity capacity assessment, report to government, Reference: 126/12 https://www.ofgem.gov.uk/ofgem-publications/40203/electricity-capacity-assessment-2012.pdf
 	# Maintenance is concentrated in the summer months. Ofgem, 2012 (page 27, Fig. 3.1) reports that coal fired power plants are 26% more available in winter than in summer - respectively gas CCGT (+17%), OCGT (+14%) and nuclear (+12%). Gas prices are also seasonal.
-	# TODO (it would be 'more pretty' to specify this as a daily smooth sine)
-	#      (but that wouldn't materially affect results)
-
 	availability = data.frame(
-		quarter = c( 1,  2,  3,  4),
-		nuclear = c(75, 70, 65, 70) / 100,
-		coal    = c(85, 65, 60, 80) / 100,
-		ccgt    = c(80, 70, 65, 80) / 100,
-		ocgt    = c(80, 70, 70, 80) / 100
+		month   = c( 1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12),
+		nuclear = c(75, 75, 75, 70, 70, 70, 65, 65, 65, 70, 70, 70) / 100,
+		coal    = c(85, 85, 85, 65, 65, 55, 55, 55, 65, 65, 80, 80) / 100,
+		ccgt    = c(85, 80, 80, 70, 70, 70, 65, 65, 65, 80, 80, 85) / 100,
+		ocgt    = c(90, 85, 80, 70, 70, 70, 70, 70, 70, 80, 85, 90) / 100
 	)
 
 
@@ -203,6 +202,12 @@
 		solar = actual$solar
 	)
 
+	# monthly means, dated by the first observation in each month
+	agg = aggregate(out[setdiff(names(out), 'date')],
+		by=list(date=format(out$date, '%Y-%m')), FUN=mean)
+	agg$date = out$date[match(agg$date, format(out$date, '%Y-%m'))]
+	write.csv(agg, file.path(output_path, 'monthly_averages.csv'), row.names=FALSE)
+
 	# look at monthly aggregate differences
 	dc = out$demand * out$cost / 2
 	dp = out$demand * out$price / 2
@@ -240,7 +245,7 @@
 		out=out, monthly_summary=monthly_summary,
 		net_demand=list(other=a, crisis=b), session_info=sessionInfo())
 
-	write.csv(model_output, file.path(output_path, 'results.csv'), row.names=FALSE)
+	saveRDS(model_output, file.path(output_path, 'results.rds'))
 	write.csv(monthly_summary, file.path(output_path, 'monthly_summary.csv'), row.names=FALSE)
 	writeLines(capture.output(sessionInfo()), file.path(output_path, 'session_info.txt'))
 
@@ -249,3 +254,4 @@
 			capacity, fuelprice, comparison, stack_colour, monthly_summary, a, b)
 
 	flush('\nFinished. Results saved in: ', normalizePath(output_path), '\n')
+
