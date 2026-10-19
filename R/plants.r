@@ -29,7 +29,7 @@ tech$Biomass = list(
 	eff_sd = 0.04,
 	eff_xi = 1,
 
-	varom_mu = 7,
+	varom_mu = -60,
 	varom_sd = 0.01,
 	varom_xi = 1,
 
