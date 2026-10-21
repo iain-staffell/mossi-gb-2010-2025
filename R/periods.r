@@ -91,13 +91,14 @@ setup_mossi_period = function(mossi, tech, plants, data, availability, start_dat
 		date=eiq$date, input_row=f, demand=eiq$demand,
 		WindOnshore=eiq$onshore.wind, WindOffshore=eiq$offshore.wind,
 		Solar=eiq$solar, Nuclear=eiq$nuclear,
-		Imports=eiq$other_supply # precomputed imports, pumped storage and hydro
+		Imports=eiq$trade,
+		Other=eiq$other_supply # precomputed imports, pumped storage and hydro
 	)
 	if (any(!is.finite(as.matrix(inputs[setdiff(names(inputs), 'date')]))))
 		stop('Missing dispatch inputs in period starting ', start_date)
 	if (any(!is.finite(as.matrix(eiq[c('wind', 'coal', 'gas', 'carbon.domestic', 'price.day')]))))
 		stop('Missing market outturn in period starting ', start_date)
-	inputs$demand_net = with(inputs, demand - WindOnshore - WindOffshore - Solar - Nuclear - Imports)
+	inputs$demand_net = with(inputs, demand - WindOnshore - WindOffshore - Solar - Nuclear - Imports - Other)
 
 	# record the capacities and fuel prices used, for inspection and plotting
 	capacity = c(vapply(tech, function(t) t$cap, numeric(1)),

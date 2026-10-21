@@ -41,7 +41,7 @@ load_mossi_inputs = function(capacity_file, price_file, ei_file)
 	# compact half-hourly data, with other supply and domestic emissions precomputed
 	eiq = readRDS(ei_file)
 	required = c('date', 'demand', 'onshore.wind', 'offshore.wind', 'wind',
-		'solar', 'nuclear', 'other_supply', 'coal', 'gas', 'carbon.domestic', 'price.day')
+		'solar', 'nuclear', 'coal', 'gas', 'biomass', 'other_supply', 'trade', 'carbon.domestic', 'price.day')
 	if (!is.data.frame(eiq) || !all(required %in% names(eiq)))
 		stop('The half-hourly input must be a data frame containing: ', paste(required, collapse=', '))
 	if (!inherits(eiq$date, 'POSIXt') || anyNA(eiq$date))
