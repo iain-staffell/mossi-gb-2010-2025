@@ -2,7 +2,26 @@
 ## ##  CHOOSE WHAT TO RUN
 #####
 
-	rm(list=ls())
+	# select which cost measure to use (set one to TRUE, the other to FALSE)
+	measure_system_marginal = TRUE		# the short-run marginal cost of the marginal generator
+	measure_benchmark_cost  = FALSE		# our best estimate of the 'fair' electricity price
+
+	# select whether to run the main or sensitivity trial (set one to TRUE, the other to FALSE)
+	run_main_trial  = TRUE				# the central analysis
+	run_sensitivity = FALSE				# testing the impact of not exporting power to France during 2022
+
+
+
+
+#####
+## ##  SETUP
+#####
+
+	if (!xor(measure_system_marginal, measure_benchmark_cost))
+		stop('Set either `measure_system_marginal` or `measure_benchmark_cost` to be TRUE\n')
+	if (!xor(run_main_trial, run_sensitivity))
+		stop('Set either `run_main_trial` or `run_sensitivity` to be TRUE\n')
+
 
 	# open MOSSI.Rproj, then source this whole script.
 	project_dir = local({
@@ -73,7 +92,11 @@
 	# of a perfectly competitive market, rather than what we think prices should be
 
 	# how much do power stations spread their bids away from SRMC (GBP/MWh)
-	mossi$bid_spread = 10.00		# (set to 0 for SRMC, 10.00 (or other value) for benchmark)
+	if (measure_benchmark_cost) {
+		mossi$bid_spread = 10.00		# (set to 10.00 (or other value) for benchmark)
+	} else {
+		mossi$bid_spread = 0.00		# (set to 0 for system marginal cost)
+	}
 
 	# the skewness of the bid distributions
 	# (1 = normal, 1.5 = long upwards tail, 0.666 = long downwards tail)
@@ -126,6 +149,47 @@
 	if (any(!requested_days %in% names(data$rows_by_day)))
 		stop('The requested dates extend beyond the half-hourly input data.')
 	period_results = vector('list', nrow(periods))
+
+
+
+#####
+## ##  MODIFY TRADE FOR OUR SENSITIVITY TEST
+#####
+
+	if (run_sensitivity)
+	{
+		dates  <- as.POSIXct(c("2022-03-15", "2022-05-01", "2022-10-15", "2022-12-01"), tz = "UTC")
+		values <- c(0, 4000, 4000, 0)
+
+		correction <- approx(
+			x = as.numeric(dates),
+			y = values,
+			xout = as.numeric(data$actual$date),
+			rule = 2
+		)$y
+
+
+		### diagnostic plots
+		#
+		# plot(data$actual$date, data$actual$trade, type='l', col='#CCCCCC')
+		# abline(h=0)
+		# lines(data$actual$date, data$actual$trade + correction, type='l', col='#DD008888')
+		# abline(h=0)
+		#
+		# library(lubridate)
+		# dd = floor_date(data$actual$date, 'day')
+		# trade_daily = aggregate(data$actual$trade, by=list(dd), mean)
+		# colnames(trade_daily) = c('date', 'original')
+		# trade_daily$corrected = trade_daily$original + aggregate(correction, by=list(dd), mean)$x
+		
+		# plot(trade_daily$date, trade_daily$original, type='l', col='grey40')
+		# lines(trade_daily$date, trade_daily$corrected, type='l', col='#DD0088')
+		# x = trade_daily$date >= dmy('01/01/2020')
+		# plot(trade_daily$date[x], trade_daily$original[x], type='l', col='grey40')
+		# lines(trade_daily$date[x], trade_daily$corrected[x], type='l', col='#DD0088')
+
+		data$actual$trade = data$actual$trade + correction
+	}
 
 
 
@@ -245,13 +309,12 @@
 		out=out, monthly_summary=monthly_summary,
 		net_demand=list(other=a, crisis=b), session_info=sessionInfo())
 
-	saveRDS(model_output, file.path(output_path, 'results.rds'))
-	write.csv(monthly_summary, file.path(output_path, 'monthly_summary.csv'), row.names=FALSE)
+	saveRDS(model_output, file.path(output_path, 'results_new.rds'))
+	write.csv(monthly_summary, file.path(output_path, 'monthly_summary_new.csv'), row.names=FALSE)
 	writeLines(capture.output(sessionInfo()), file.path(output_path, 'session_info.txt'))
 
 	if (plot)
-		write_mossi_plots(file.path(output_path, 'figures.pdf'), run_dates,
+		write_mossi_plots(file.path(output_path, 'figures_new.pdf'), run_dates,
 			capacity, fuelprice, comparison, stack_colour, monthly_summary, a, b)
 
 	flush('\nFinished. Results saved in: ', normalizePath(output_path), '\n')
-

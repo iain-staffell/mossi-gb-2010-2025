@@ -21,20 +21,22 @@
 			abline(h=0)
 		}
 
+		par(cex = 1.3)
 		plot(NA, xlim=c(0, 60), ylim=c(-100, 350),
 			xlab='Demand net of wind and solar (GW)',
-			ylab='Difference between day-ahead price and SRMC (\u00a3/MWh)')
+			ylab='Difference between observed price and benchmark cost (\u00a3/MWh)')
 		abline(h=0)
-		groups = list(crisis, other)
-		colours = c('#FF8529', '#182CC4')
-		labels = c('September 2021 to December 2022', 'Other months in the selected date range')
+		groups = list(other, crisis)
+		colours = c('#182CC4', '#FF8529')
+		labels = c('Other times', 'Energy crisis')
 		present = vapply(groups, nrow, integer(1)) > 0
 		for (i in which(present)) {
 			x = groups[[i]]
 			plot_area(x$net, x$p25, x$p75, border=NA, col=paste0(colours[i], '44'))
 			lines(x$net, x$p50, lwd=3, col=colours[i])
 		}
-		legend('topleft', legend=labels[present], lwd=3, col=colours[present], bty='n')
+		legend('topleft', legend=labels[present], lwd=3, col=colours[present], bty='n', inset=c(0.04, 0.04), y.intersp=1.8)
+		par(cex = 1.0)
 	}
 
 	plot_comparison = function(run_dates, capacity, fuelprice, comparison, stack_colour)
